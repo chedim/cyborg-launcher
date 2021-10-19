@@ -5,7 +5,7 @@ Cyborg launcher is an Android launcher with built-in X server and Termux integra
 * Currently under development
 
 # Supported X11 apps:
-- clock 
+- xclock 
 
 # Roadmap
 - [+] Implement the launcher
