@@ -1,16 +1,13 @@
 package tdm.xserver;
 
-import android.util.Log;
-
 import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Rect;
-
-import android.view.View;
+import android.util.Log;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.view.View;
 
 class ClientView extends View {
   private static final String TAG = ClientView.class.getName();
@@ -22,6 +19,7 @@ class ClientView extends View {
     mWindow = w;
     mClient = w.mClient;
     Log.i(TAG, "Creating view " + w.mId + " in context " + ctx);
+    setWillNotDraw(false);
   }
 
   void destroy() {
@@ -36,14 +34,17 @@ class ClientView extends View {
               + ", h=" + mWindow.mRect.h);
       setMeasuredDimension(mWindow.mRect.w, mWindow.mRect.h);
     } catch (NullPointerException e) {
+      Log.w(TAG, "Failed to measure ClientView#" + mWindow.mId, e);
       setMeasuredDimension(0, 0);
     }
   }
 
   public void onDraw(Canvas canvas) {
-    Log.d("X", "ClientView#" + mWindow.mId + ".onDraw");
     if (mWindow.mBitmap != null) {
+      Log.d(TAG, "ClientView#" + mWindow.mId + ".onDraw bmp=" + mWindow.mBitmap);
       canvas.drawBitmap(mWindow.mBitmap, 0, 0, null);
+    } else {
+      Log.w(TAG, "ClientView#" + mWindow.mId + " DID NOT RENDER: mBitmap is null");
     }
   }
 
@@ -133,6 +134,7 @@ class ClientView extends View {
   }
 
   protected void onFocusChanged(boolean gainFocus, int direction, Rect prev) {
+    super.onFocusChanged(gainFocus, direction, prev);
     Log.d("X", "ClientView#" + mWindow.mId + ".onFocusChanged(" + gainFocus + ")");
   }
 }

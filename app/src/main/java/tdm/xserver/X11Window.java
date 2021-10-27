@@ -59,7 +59,7 @@ public class X11Window extends X11Drawable
     Map<Integer,X11Property>    mProperties;
 
     // sibling position
-    ArrayList<X11Window>        mChildren;
+    ArrayList<X11Window>        mChildren = new ArrayList<>();
 
     ClientView                  mView;
 
@@ -75,7 +75,6 @@ public class X11Window extends X11Drawable
         super(X11Resource.WINDOW, id);
         windows.put(id, this);
         mProperties = new HashMap<Integer,X11Property>();
-        mChildren = new ArrayList<X11Window>();
     }
 
     void destroy() {
@@ -138,6 +137,7 @@ public class X11Window extends X11Drawable
     }
 
     void handleCreate(X11Client c, X11RequestMessage msg) throws X11Error {
+        Log.i(TAG, "Creating window#" + mId + " for client#" + c.mId);
         mClient = c;
         mDepth = msg.headerData();
         mParent = c.getWindow(msg.mData.deqInt());
@@ -150,7 +150,7 @@ public class X11Window extends X11Drawable
         mRect.h = msg.mData.deqShort();
         mBorderWidth = msg.mData.deqShort();
 
-        mBitmap = Bitmap.createBitmap(mRect.w, mRect.h, Bitmap.Config.ARGB_8888);
+        mBitmap = mBitmap != null ? mBitmap : Bitmap.createBitmap(mRect.w, mRect.h, Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(mBitmap);
 
         mWndClass = msg.mData.deqShort();
@@ -490,6 +490,9 @@ public class X11Window extends X11Drawable
     void postRender() {
         if (mView != null) {
             mView.postInvalidate();
+            Log.i(TAG, "Invalidated ClientView#" + mId);
+        } else {
+            Log.w(TAG, "DID NOT INVALIDATE ClientView#" + mId + ": mView is null");
         }
     }
 

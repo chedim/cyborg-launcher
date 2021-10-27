@@ -106,11 +106,12 @@ public class UIHandler extends Handler
         w.mView.setFocusable(true);
         w.mView.setFocusableInTouchMode(true);
         w.mView.setVisibility(View.VISIBLE);
-        Log.d("X", "UI: w="+w.mId+": Attached ClientView to root window");
+        Log.d("X", "UI: w="+w.mId+": Attached ClientView#" + w.mId + " to root window");
     }
 
     protected void viewCreate(X11Window w) {
         if (w.mRect == null) {
+            Log.w(TAG, "DID NOT CREATE ClientView#" + w.mId + ": mRect is null");
             return;
         }
         w.mView = new ClientView(getContext(), w);
@@ -121,21 +122,28 @@ public class UIHandler extends Handler
         mViewGroup.addView(w.mView, lp);
         w.mView.setFocusable(true);
         w.mView.setFocusableInTouchMode(true);
-        w.mView.setVisibility(View.INVISIBLE);
-        Log.d("X", "UI: w="+w.mId+": Attached ClientView to window at x="+w.mRect.x+", y=" + w.mRect.y);
+        if (!w.mRealized) {
+            w.mView.setVisibility(View.INVISIBLE);
+        }
+        Log.d("X", "UI: w="+w.mId+": Attached ClientView#" + w.mId + " to window " + w.mParent.mId + " at x="+w.mRect.x+", y=" + w.mRect.y);
     }
 
     protected void recreateViews(X11Window window) {
         Log.i(TAG, "Recreating " + window);
+        if (window.mIsRoot) {
+            viewCreateRoot(window);
+        } else {
+            viewCreate(window);
+        }
         window.repaint();
-        for (X11Window child: window.mChildren) {
-            UIHandler handler = child.getHandler();
-            if (handler != null && handler != this && child.mRect != null) {
-                Log.i(TAG, "Delegating re-creation to " + handler);
-                handler.handleMessage(Message.obtain(handler, MSG_VIEW_RECREATE, child));
-            } else {
-                handler.viewCreate(child);
-                child.repaint();
+        if (window.mChildren != null) {
+            for (X11Window child : window.mChildren) {
+                UIHandler handler = child.getHandler();
+                if (handler != null && handler != this && child.mRect != null) {
+                    Log.i(TAG, "Not delegating re-creation to " + handler);
+                } else {
+                    recreateViews(child);
+                }
             }
         }
     }
@@ -145,12 +153,6 @@ public class UIHandler extends Handler
         Log.i(TAG, "Updating view group to " + newViewGroup);
         X11Window window = X11Window.windows.get(mWindowId);
         if (window != null) {
-            if (window.mIsRoot) {
-                Log.i(TAG, "Updating ROOT view group to " + newViewGroup);
-                viewCreateRoot(window);
-            } else {
-                viewCreate(window);
-            }
             recreateViews(window);
         }
     }

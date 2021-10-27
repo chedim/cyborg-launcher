@@ -11,6 +11,7 @@ import java.util.ArrayList;
 
 abstract class X11Drawable extends X11Resource
 {
+    private static final String TAG = X11Drawable.class.getName();
     byte                mDepth;
     byte                mBPP;
     X11Rect             mRect;
@@ -234,6 +235,7 @@ abstract class X11Drawable extends X11Resource
             throw new X11Error(X11Error.VALUE, fmt);
         }
 
+        Log.d(TAG, "Drawing a bitmap into " + mBitmap);
         mCanvas.drawBitmap(bmp, rect.x, rect.y, null);
         postRender(rect);
     }
